@@ -1,0 +1,48 @@
+<?php
+// $Id: taxonomynode.install,v 1.2.2.1 2009/05/28 21:21:47 hanoii Exp $
+
+/**
+ * Implementation of hook_schema().
+ */
+function taxonomynode_schema() {
+  $schema['taxonomynode'] = array(
+    'description' => t('Store association between terms and nodes.'),
+    'fields' => array(
+      'tid' => array(
+        'description' => t('Term ID'),
+        'type' => 'int',
+        'not null' => TRUE,
+      ),
+      'vid' => array(
+        'description' => t('Vocabulary ID'),
+        'type' => 'int',
+        'not null' => TRUE,
+      ),
+      'nid' => array(
+        'description' => t('Node ID'),
+        'type' => 'int',
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('tid'),
+  );
+
+  return $schema;
+}
+
+/**
+ * Implementation of hook_install().
+ */
+function taxonomynode_install() {
+  // Create tables.
+  drupal_install_schema('taxonomynode');
+  drupal_set_message(t('The Taxonomy Node module was installed. This module extends the configuration screen of vocabularies so you can associate content types with them.'));
+}
+
+/**
+ * Implementation of taxonomynode_uninstall().
+ */
+function taxonomynode_uninstall() {
+  drupal_uninstall_schema('taxonomynode');
+  drupal_set_message(t('The Taxonomy Node module was uninstalled.'));
+}

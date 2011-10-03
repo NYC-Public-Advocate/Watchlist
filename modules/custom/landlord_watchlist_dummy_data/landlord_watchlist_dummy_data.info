@@ -1,0 +1,35 @@
+; Copyright (C) 2011  Jeff Lyon, NYC Public Advocate, <jeff@albatrossdigital.com>
+; 
+; This program is free software: you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation, either version 3 of the License, or
+; (at your option) any later version.
+; 
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+; 
+; You should have received a copy of the GNU General Public License
+; along with this program.  If not, see <http://www.gnu.org/licenses/>
+;
+
+core = "6.x"
+dependencies[] = "landlord_watchlist"
+dependencies[] = "uuid_features"
+description = "Provides dummy data for the Landlord Watchlist."
+features[ctools][] = "strongarm:strongarm:1"
+features[uuid_node][] = "0a15bf49-e359-11e0-96c3-40408e9676d4"
+features[uuid_node][] = "0a15cd28-e359-11e0-96c3-40408e9676d4"
+features[uuid_node][] = "0a15da7b-e359-11e0-96c3-40408e9676d4"
+features[uuid_node][] = "0a15e7c9-e359-11e0-96c3-40408e9676d4"
+features[uuid_node][] = "0a15f51d-e359-11e0-96c3-40408e9676d4"
+features[uuid_term][] = "0a16eac0-e359-11e0-96c3-40408e9676d4"
+features[uuid_term][] = "0a16fde7-e359-11e0-96c3-40408e9676d4"
+features[uuid_term][] = "0a170d01-e359-11e0-96c3-40408e9676d4"
+features[uuid_term][] = "0a171aaf-e359-11e0-96c3-40408e9676d4"
+features[uuid_term][] = "0a17282a-e359-11e0-96c3-40408e9676d4"
+name = "Landlord Watchlist Dummy Data"
+package = "Features"
+project = "landlord_watchlist_dummy_data"
+version = "6.x-1.0-beta1"

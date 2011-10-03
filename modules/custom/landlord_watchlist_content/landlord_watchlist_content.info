@@ -1,0 +1,42 @@
+; Copyright (C) 2011  Jeff Lyon, NYC Public Advocate, <jeff@albatrossdigital.com>
+; 
+; This program is free software: you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation, either version 3 of the License, or
+; (at your option) any later version.
+; 
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+; 
+; You should have received a copy of the GNU General Public License
+; along with this program.  If not, see <http://www.gnu.org/licenses/>
+;
+
+core = "6.x"
+dependencies[] = "menu"
+dependencies[] = "strongarm"
+dependencies[] = "uuid_features"
+description = "Creates the informational pages and forms that are necessary for any installation."
+features[ctools][] = "strongarm:strongarm:1"
+features[menu_links][] = "primary-links:node/1"
+features[menu_links][] = "primary-links:node/2"
+features[menu_links][] = "primary-links:node/3"
+features[menu_links][] = "primary-links:node/6"
+features[node][] = "page"
+features[node][] = "webform"
+features[uuid_node][] = "397cc44e-cea7-11e0-b792-40408e9676d4"
+features[uuid_node][] = "397cf8c0-cea7-11e0-b792-40408e9676d4"
+features[uuid_node][] = "397e7e93-cea7-11e0-b792-40408e9676d4"
+features[uuid_node][] = "c8ffb95a-ce9f-11e0-ba3f-1c750844f36b"
+features[uuid_node][] = "c8ffc2a6-ce9f-11e0-ba3f-1c750844f36b"
+features[uuid_node][] = "c8ffd53e-ce9f-11e0-ba3f-1c750844f36b"
+features[uuid_node][] = "c90080ba-ce9f-11e0-ba3f-1c750844f36b"
+features[variable][] = "comment_page"
+features[variable][] = "node_options_page"
+features[variable][] = "upload_page"
+name = "Landlord Watchlist Content"
+package = "Features"
+project = "landlord_watchlist_content"
+version = "6.x-1.0-beta1"

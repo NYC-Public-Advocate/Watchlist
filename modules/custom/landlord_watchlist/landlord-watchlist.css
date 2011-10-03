@@ -1,0 +1,337 @@
+/*
+ * Landlord Watchlist section
+ */
+ 
+.section-landlord-watchlist h1.title{
+  display: none;
+}
+
+body.landlords-only-gmap .view-landlords .quicktabs_wrapper .quicktabs_main,
+body.ajax-gmap-clicked  .view-landlords .quicktabs_wrapper .quicktabs_main {
+  height: 500px;
+}
+
+body.landlords-only-gmap .view-landlords .quicktabs_wrapper .quicktabs_main .gmap-gmap {
+  visibility: hidden;
+}
+
+body.landlords-only-gmap .view-landlords .quicktabs_wrapper .quicktabs_main .landlord-choose-filters {
+  position: absolute;
+}
+
+body.ajax-gmap-clicked .view-landlords .quicktabs_wrapper .quicktabs_main .landlord-choose-filters {
+  display: none;
+}
+
+body.ajax-gmap-clicked .view-landlords .quicktabs_wrapper .quicktabs_main .gmap-gmap {
+  visibility: visible;
+}
+
+/*.view-landlords td{
+  max-width: 200px;
+  min-width: 50px;
+  padding: 2px 4px;
+  vertical-align: top;
+}
+*/
+.view-landlords td p{
+  margin: .25em 0;
+}
+
+.view-landlords tbody .views-field-rownumber{
+  font-size: 3em;
+  color: #aaa;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.view-landlords .views-field-changed{
+  width: 165px;
+}
+
+.view-landlords .item-list{
+  display: none;
+}
+
+.view-landlords .attachment .item-list{
+  display: block;
+}
+
+.view-landlords table img{
+  padding: 5px;
+}
+
+.view-landlords #edit-keyword{
+  width: 300px;
+}
+
+.view-landlords .form-reset{
+  position: absolute;
+  margin-top: -2em;
+  margin-left: 80px;
+}
+
+.views-field-field-landlord-bedbugs-value,
+.views-field-field-landlord-heating-value{
+  float: right;
+  margin-right: 10px;
+  margin-top: 10px;
+}
+
+.view-landlords .gmap-popup{
+  padding-bottom: 1em;
+}
+
+.view-landlords .gmap-popup label{
+    float: left;
+    font-weight: bold;
+    font-size: .9em;
+    width: 70px;
+    text-align: right;
+    margin-right: 5px;
+    color: #999;
+  }
+
+.view-landlords .gmap-popup .views-field-address label,
+.view-landlords .gmap-popup .views-field-field-classes-held-value label,
+.view-landlords .gmap-popup .views-field-title label{
+    position: absolute;
+    
+  }
+  
+.view-landlords .gmap-popup .field-content{
+    margin-bottom: .5em;
+    display: block;
+  }
+  
+.view-landlords .gmap-popup .views-field-address .field-content,
+.view-landlords .gmap-popup .views-field-field-classes-held-value .field-content,
+.view-landlords .gmap-popup .views-field-title .field-content{
+    margin-left: 75px;
+    display: block;
+  }
+
+
+.view-landlords .gmap-popup .views-field-address,
+.view-landlords .gmap-popup .views-field-title,
+.view-landlords .gmap-popup .views-field-field-landlord-units-value,
+.view-landlords .gmap-popup .views-field-field-landlord-vio-total-value{
+
+}
+
+.view-landlords .gmap-popup .views-field-longitude{
+  position: absolute;
+}
+
+.streetview-link{
+  background: url(images/icon-view.gif) left center no-repeat;
+  padding-left: 20px;
+}
+
+.streetview-picture{
+  position: absolute;
+  padding: 5px;
+  background-color: #fff;
+  border: 1px solid #ccc;'
+  display: none;
+}
+
+.streetview-picture .google-streetview-link{
+  float: left;
+  color: #777;
+  font-size: .8em;
+  bottom: 0;
+}
+
+.streetview-picture .streetview-close{
+  float: right;
+}
+
+.ui-dropdownchecklist-dropcontainer{
+  padding: 4px;
+}
+
+/*body.section-landlord-watchlist #navbar{
+  background: url(images/landlordwatchlist-header.png?1) 10px 48px no-repeat;
+  padding-bottom: 110px;
+}
+
+body.section-landlord-watchlist .with-navbar #content,
+body.section-landlord-watchlist .with-navbar #sidebar-left,
+body.section-landlord-watchlist .with-navbar #sidebar-right{
+  margin-top: 153px;
+}
+
+.view-landlords .view-header{
+  margin-left: 175px;
+  min-height: 120px;
+}
+
+body.section-landlord-watchlist #content-top{
+  position: absolute;
+  width: 165px;
+}*/
+
+#block-menu-menu-landlord-watchlist{
+  z-index: 10;
+}
+
+body.section-landlord-watchlist #span-top ul.menu{
+  float: right;
+  margin-top: 1.3em;
+}
+
+body.section-landlord-watchlist #span-top ul.menu li{
+  display: inline;
+}
+
+body.section-landlord-watchlist #span-top ul.menu li a{
+  padding: 0 10px;
+  border-right: 1px solid #4E6A7D;
+}
+
+body.section-landlord-watchlist #span-top ul.menu li a.link-tenants-rights,
+body.section-landlord-watchlist #span-top ul.menu li a.link-landlord-resources,
+body.section-landlord-watchlist #span-top ul.menu li.last a{
+  padding-right: 0;
+  border-right: 0;
+}
+
+body.section-landlord-watchlist #span-top ul.menu li a.link-tenants-rights,
+body.section-landlord-watchlist #span-top ul.menu li a.link-landlord-resources{
+  position: absolute;
+  top: 3.6em;
+  right: 0;
+  font-size: 1.2em;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+body.section-landlord-watchlist #span-top ul.menu li a.link-landlord-resources{
+  top: 5em;
+}
+
+ul.quicktabs_tabs.quicktabs-style-sky li a,
+ul.quicktabs_tabs.quicktabs-style-sky li a:visited{
+  color: #333;
+}
+
+ul.quicktabs_tabs.quicktabs-style-sky li a{
+  background: url(images/tab-sprite.jpg) 0 0 repeat-x;
+}
+
+ul.quicktabs_tabs.quicktabs-style-sky li a:hover{
+  color: #000;
+  background: #ccc;
+}
+
+ul.quicktabs_tabs.quicktabs-style-sky li.last a{
+  background-position: 0 bottom;
+}
+
+
+#block-block-28{
+  position: absolute;
+}
+
+body.section-landlord-watchlist #span-top .title{
+  font-size: 2.6em;
+  color: #3A596E;
+  line-height: 1em;
+}
+
+body.section-landlord-watchlist #span-top .title .line-2{
+  color: #C3CCD3;
+  font-size: 1.7em;
+  line-height: 1em;
+}
+
+body.section-landlord-watchlist #span-top .title strong{
+  font-family: "Arial Black", Arial;
+  font-weight: normal;
+}
+
+
+.view-landlords .views-exposed-form{
+  margin: 1em 0;
+}
+
+.views-exposed-form .views-exposed-widget {
+  padding: 0.5em 0.5em 0 0;
+}
+
+.view-landlords .show-buildings{
+  font-weight: bold;
+}
+
+.view-landlords .show-buildings.active a{
+  color: red;
+}
+
+.view-landlords .other-violations{
+  display: block;
+}
+
+.view-landlords .other-violations .heating-violations,
+.view-landlords .other-violations .bedbugs{
+  width: 16px;
+  height: 16px;
+  float: left;
+  background: url(images/bedbug.png) center no-repeat;
+  overflow: hidden;
+  text-indent: -1000em;
+  padding: 2px 5px 2px 0;
+}
+
+.view-landlords .other-violations .heating-violations{
+  background-image: url(images/snowflake.png);
+}
+
+.view-landlords .landlord-choose-filters{
+  height: 230px;
+  padding: 120px 20px 0 20px;
+  font-size: 2.2em;
+  line-height: 1.3em;
+  font-style: italic;
+  color: #2F5776;
+  font-weight: bold;
+  text-align: center;
+  font-family: Georgia,"Times New Roman","Bitstream Vera Serif",serif;
+  background: url(images/watchlist-instruction-map.jpg) center top no-repeat;
+}
+
+/*.views-exposed-widget a{
+  display: block;
+  margin-top: 1.2em;
+  font-size: .8em;
+  float: left;
+}*/
+
+.ui-dropdownchecklist{
+  border-right-width: 1px !important;
+  border-top-color: #999;
+  border-right: 1px solid #CCC;
+  border-bottom-color: #CCC;
+  border-left-color: #999;
+  height: 26px;
+  margin-top: 2px;
+  background-image: url(images/arrow.png) !important;
+}
+
+.ui-dropdownchecklist:hover{
+  border-top-color: #BE974B;
+  border-right-color: #F1CA7F;
+  border-bottom-color: #F1CA7F;
+  border-left-color: #BE974B;
+}
+
+.ui-dropdownchecklist-text{
+  padding: 3px;
+  font-size: 1em !important;
+}
+
+.ui-dropdownchecklist-dropcontainer label{
+  font-weight: normal;
+}
+
+

@@ -1,0 +1,173 @@
+/* $Id$ */
+
+/*
+ * Layout styles
+ */
+#primary ul li.request-quote {
+  float: right;
+}
+
+/*
+ * Profile module
+ */
+.picture img {
+  height: 64px;
+  width: 64px;
+}
+
+/*
+ * Views module
+ */
+/* Global reset Views HTML lists */
+.view .item-list ul,
+.view .item-list ul li {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+/* Twitter feed @ktleow block */
+#block-views-twitter-ktleow_block li.views-row {
+  margin: 10px 0;
+}
+#block-views-twitter-ktleow_block .views-field-timestamp {
+  color: #666;
+  font-size: 0.923em;
+}
+/* Portfolio */
+.view-display-id-portfolio_page .item-list ul li.views-row {
+  border-bottom: 1px solid #d6d6d6;
+  float: left;
+  margin: 10px 0 20px 0;
+  padding-bottom: 20px;
+  width: 100%;
+}
+.view-display-id-portfolio_page p {
+  margin: 0;
+}
+.view-display-id-portfolio_page .views-field-field-image-fid {
+  float: right;
+  margin: 0 0 1em 1em;
+}
+.view-display-id-portfolio_page .views-field-title {
+  font-size: 1.538em;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+.view-display-id-portfolio_page .views-field-body {
+  margin-bottom: 15px;
+}
+/* Testimonials */
+.view-testimonials .item-list ul li.views-row {
+  margin: 10px 0 20px 0;
+}
+.view-testimonials .views-field-body {
+  background: url(../images/blockquote.png) no-repeat 0 3px;
+}
+.view-testimonials .views-field-body,
+.view-testimonials .views-field-title,
+.view-testimonials .views-field-field-company-value,
+.view-testimonials .views-field-field-website-url {
+  padding-left: 20px;
+}
+.view-testimonials .views-field-title {
+  font-weight: bold;
+}
+.view-display-id-testimonials_page .item-list ul li.views-row {
+  border-bottom: 1px solid #d6d6d6;
+  padding-bottom: 20px;
+}
+#block-views-testimonials-block_1 .block-subject {
+  border-bottom: 0;
+}
+/* Recent posts */
+#block-views-blog-block_1 li.views-row {
+  margin: 10px 0;
+}
+#block-views-blog-block_1 .views-field-title {
+  font-weight: bold;
+}
+#block-views-blog-block_1 .views-field-created,
+#block-views-blog-block_1 .views-field-comment-count {
+  color: #666;
+  font-size: 0.923em;
+}
+
+/*
+ * JCarousel - Portfolio Views block
+ */
+#block-views-portfolio-block_1 {
+  overflow: hidden;
+  height: 330px;
+  position: relative;
+  z-index: 1;
+}
+#block-views-portfolio-block_1 .jcarousel-container {
+  position: relative;
+}
+#block-views-portfolio-block_1 .jcarousel-clip,
+#block-views-portfolio-block_1 .jcarousel-list {
+  margin: 0;
+  overflow: hidden;
+  padding: 0;
+  position: relative;
+}
+#block-views-portfolio-block_1 .jcarousel-list {
+  left: 0;
+  top: 0;
+}
+#block-views-portfolio-block_1 .jcarousel-list li,
+#block-views-portfolio-block_1 .jcarousel-item {
+  float: left;
+  list-style-image: none;
+  list-style-type: none;
+}
+#block-views-portfolio-block_1 .item-list ul,
+#block-views-portfolio-block_1 .item-list ul li {
+  margin: 0 10px;
+  padding: 0;
+}
+#block-views-portfolio-block_1 .jcarousel-clip {
+  height: 280px;
+  margin: 0 0 0 15px;
+  overflow: hidden;
+  width: 660px;
+}
+#block-views-portfolio-block_1 .jcarousel-container .jcarousel-next,
+#block-views-portfolio-block_1 .jcarousel-container .jcarousel-prev {
+  background: transparent url(../images/custom/jcarousel-pager.png) no-repeat 0 0;
+  cursor: pointer;
+  height: 20px;
+  position: absolute;
+  top: 116px;
+  width: 8px;
+}
+#block-views-portfolio-block_1 .jcarousel-container .jcarousel-next-disabled,
+#block-views-portfolio-block_1 .jcarousel-container .jcarousel-next-disabled:active,
+#block-views-portfolio-block_1 .jcarousel-container .jcarousel-next-disabled:hover {
+  background-position: 0 -60px !important;
+}
+#block-views-portfolio-block_1 .jcarousel-container .jcarousel-next {
+  background-position: 0 -80px;
+  right: 0;
+}
+#block-views-portfolio-block_1 .jcarousel-container .jcarousel-next:active,
+#block-views-portfolio-block_1 .jcarousel-container .jcarousel-next:hover {
+  background-position: 0 -100px;
+}
+#block-views-portfolio-block_1 .jcarousel-container .jcarousel-prev-disabled,
+#block-views-portfolio-block_1 .jcarousel-container .jcarousel-prev-disabled:active,
+#block-views-portfolio-block_1 .jcarousel-container .jcarousel-prev-disabled:hover {
+  background-position: 0 0 !important;
+}
+#block-views-portfolio-block_1 .jcarousel-container .jcarousel-prev {
+  background-position: 0 -20px;
+  left: 0;
+}
+#block-views-portfolio-block_1 .jcarousel-container .jcarousel-prev:active,
+#block-views-portfolio-block_1 .jcarousel-container .jcarousel-prev:hover {
+  background-position: 0 -40px;
+}
+#block-views-portfolio-block_1 .views-field-title {
+  font-weight: bold;
+  text-align: center;
+}

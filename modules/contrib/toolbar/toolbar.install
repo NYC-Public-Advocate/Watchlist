@@ -1,0 +1,127 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the Toolbar module.
+ */
+
+/**
+ * Implementation of hook_install().
+ */
+function toolbar_install() {
+  drupal_install_schema('toolbar');
+
+  // Create initial example toolbar for admin
+  drupal_load('module', 'toolbar');
+  $shortcuts = array(
+    array(
+      'link_title'  => 'Admin',
+      'link_path'   => 'admin'
+    ),
+    array(
+      'link_title'  => 'Administer toolbar',
+      'link_path'   => 'admin/build/toolbar'
+    ),
+    array(
+      'link_title'  => 'Toolbar settings',
+      'link_path'   => 'admin/settings/toolbar'
+    ),
+  );
+
+  $toolbar = toolbar_create('default', 'Default', $shortcuts);
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function toolbar_uninstall() {
+
+  // Delete all the links this module created in menu_links table
+  $result = db_query("SELECT mlid FROM {menu_links} ml WHERE ml.module = '%s'", 'toolbar');
+  while ($link = db_fetch_array($result)) {
+    menu_link_delete($link['mlid']);
+  }
+  drupal_uninstall_schema('toolbar');
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function toolbar_schema() {
+  return array(
+    // Toolbar entity table
+    'toolbar_toolbar' => array(
+      'description' => 'Stores toolbar unique name and title.',
+      'fields' => array(
+        'name' => array(
+          'type'        => 'varchar',
+          'length'      => 32,
+          'not null'    => TRUE,
+          'description' => 'Toolbar machine-readable name.',
+        ),
+        'title' => array(
+          'type'        => 'varchar',
+          'length'      => 255,
+          'not null'    => TRUE,
+          'description' => 'Toolbar title.',
+        ),
+      ),
+      'primary key' => array('name'),
+      'foreign keys' => array(
+        'name' => array('menu_links' => 'menu_name'),
+      ),
+    ),
+    // Toolbar user association table
+    'toolbar_user' => array(
+      'description' => 'Stores toolbar - user association. Toolbar configuration per user.',
+      'fields' => array(
+        'uid' => array(
+          'type'        => 'int',
+          'unsigned'    => TRUE,
+          'not null'    => TRUE,
+          'description' => 'User id reference.',
+        ),
+        'name' => array(
+          'type'        => 'varchar',
+          'length'      => 32,
+          'not null'    => TRUE,
+          'description' => 'Toolbar name reference.',
+        ),
+      ),
+      'primary key' => array('uid'),
+      'foreign keys' => array(
+        'name'  => array('toolbar_toolbar' => 'name'),
+        'uid'   => array('users' => 'uid'),
+      ),
+    ),
+    // Toolbar role association table
+    'toolbar_role' => array(
+      'description' => 'Stores toolbar - role association. Toolbar configuration per user role.',
+      'fields' => array(
+        'rid' => array(
+          'type'        => 'int',
+          'unsigned'    => TRUE,
+          'not null'    => TRUE,
+          'description' => 'Role id reference.',
+        ),
+        'name' => array(
+          'type'        => 'varchar',
+          'length'      => 32,
+          'not null'    => TRUE,
+          'description' => 'Toolbar name reference.',
+        ),
+        'weight' => array(
+          'type'        => 'int',
+          'not null'    => TRUE,
+          'default'     => 0,
+          'description' => 'Role id reference.',
+        ),
+      ),
+      'primary key' => array('rid'),
+      'foreign keys' => array(
+        'name'  => array('toolbar_toolbar' => 'name'),
+        'rid'   => array('role' => 'rid'),
+      ),
+    ),
+  );
+}

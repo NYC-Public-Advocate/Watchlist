@@ -1,0 +1,156 @@
+<?php
+// $Id$
+/* Copyright (C) 2011  Jeff Lyon, NYC Public Advocate, <jeff@albatrossdigital.com>
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>
+ */
+ 
+
+/**
+ * Implementation of hook_form_alter().
+ * Alter Delete items link on import/landlord_watchlist.
+ */
+function landlord_watchlist_profile_form_feeds_import_form_alter(&$form, $form_state) {
+  if ($form['#importer_id']){
+    drupal_add_js(drupal_get_path('module', 'landlord_watchlist_profile') .'/landlord-watchlist-profile.js', 'module');
+  }
+  
+  $dest = file_directory_path() . '/feeds/';
+  if (!$form['feeds']['FeedsFileFetcher']['upload']['#file_info'] && file_check_directory($dest, FILE_CREATE_DIRECTORY)){
+    $orig = drupal_get_path('module', 'landlord_watchlist_dummy_data') . '/watchlist_dummy_data.csv';
+    file_copy($orig, $dest . '/watchlist_dummy_data.csv');
+    $form['feeds']['FeedsFileFetcher']['source']['#default_value'] = $dest . '/watchlist_dummy_data.csv';
+    $form['feeds']['FeedsFileFetcher']['upload']['#file_info']['path'] = $dest . '/watchlist_dummy_data.csv';
+    $form['feeds']['FeedsFileFetcher']['upload']['#file_info']['size'] = filesize($dest . '/watchlist_dummy_data.csv');
+  }
+  $form['feeds']['FeedsCSVParser']['help']['#value'] = '<p><strong>You can import dummy example landlords by clicking Import.  If you would like to upload your data, browse to your CSV file, click Upload, and then click Import</strong></p>' . $form['feeds']['FeedsCSVParser']['help']['#value'];
+}
+
+/**
+ * Implementation of hook_form_alter().
+ * Alter Add term link on admin/content/taxonomy/1.
+ */
+function landlord_watchlist_profile_form_taxonomy_overview_terms_alter(&$form, $form_state) {
+  if ($form['#vocabulary']['vid'] == 1){
+    drupal_add_js(drupal_get_path('module', 'landlord_watchlist_profile') .'/landlord-watchlist-profile.js', 'module');
+  }
+  $form['watchlist_neighborhood_suffix'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Neighborhood Suffix'),
+    '#description' => t('Appears after the neighborhood name on the top tabs for the map views. Should begin with a space.'),
+    '#default_value' => variable_get('watchlist_neighborhood_suffix', ' buildings'),
+    '#weight' => -1000,
+  );
+  $form['#submit'][] = 'landlord_watchlist_profile_form_taxonomy_overview_terms_submit';
+  drupal_set_message(t('Be sure you have set the !link.', array('!link' => l('default map settings', 'admin/settings/gmap'))));
+}
+
+/**
+ * Implementation of hook_form_submit().
+ * Save watchlist_neighborhood_suffix.
+ */
+function landlord_watchlist_profile_form_taxonomy_overview_terms_submit($form, &$form_state) {
+  variable_set('watchlist_neighborhood_suffix', $form_state['values']['watchlist_neighborhood_suffix']);
+}
+
+/**
+ * Implementation of hook_form_alter().
+ * Add a link to the Google Maps API signup form.
+ */
+function landlord_watchlist_profile_form_gmap_admin_settings_alter(&$form, $form_state) {
+  $form['initialization']['googlemap_api_key']['#description'] = t('Your personal Googlemaps API key. You must get this for each separate website at !link.', array('!link' => l('Google Map API website', 'http://code.google.com/apis/maps/signup.html', array('attributes' => array('target' => '_blank')))));
+}
+
+
+/**
+ * Implementation of hook_form_alter().
+ * Hijack the node/add/neighborhood form, adding a gmap for center, zoom level input.
+ */
+function landlord_watchlist_profile_form_alter(&$form, $form_state, $form_id) {
+
+  if ($form_id == 'neighborhood_node_form'){
+    
+    $defaults = gmap_defaults();
+    if (!$form['field_neighborhood_center'][0]['#default_value']['value']){
+      $form['field_neighborhood_center'][0]['#default_value']['value'] = $defaults['latlong'];
+    }
+    $defaults['latlong'] = $form['field_neighborhood_center'][0]['#default_value']['value']; 
+    $form['field_neighborhood_center'][0]['#type'] = 'hidden';
+    
+    if (!$form['field_neighborhood_zoom'][0]['#default_value']['value']){
+      $form['field_neighborhood_zoom'][0]['#default_value']['value'] = $defaults['zoom'];
+    }
+    $defaults['zoom'] = $form['field_neighborhood_zoom'][0]['#default_value']['value']; 
+    $form['field_neighborhood_zoom'][0]['#type'] = 'hidden';
+    
+    $form['taxonomy']['#type'] = 'hidden';
+    
+    $form['gmap_default']['map'] = array(
+      '#type' => 'gmap',
+      '#label' => 'Map center',
+      '#map' => 'settings_default_map',
+      '#weight' => -1000,
+      '#settings' => array(
+        'behavior' => array(
+          'nodrag' => FALSE,
+          'nokeyboard' => FALSE,
+        ),
+      ),
+    );
+
+    // Allow previewable behaviors to affect the preview map.
+    $m = array();
+    $behaviors = gmap_module_invoke('behaviors', $m);
+    foreach ($behaviors as $k => $v) {
+      if (isset($v['previewable']) && $v['previewable']) {
+        $form['gmap_default']['map']['#settings']['behavior'][$k] = $defaults['behavior'][$k];
+      }
+    }
+    $form['title']['#weight'] = -91;
+    
+    $form['gmap_default']['latlong'] = array(
+      '#type' => 'gmap_latlon',
+      '#map' => 'settings_default_map',
+      '#title' => t('Center'),
+      '#default_value' => $defaults['latlong'],
+      '#size' => 50,
+      '#maxlength' => 255,
+    );
+    $form['gmap_default']['zoom'] = array(
+      '#type' => 'select',
+      '#title' => t('Zoom'),
+      '#default_value' => $defaults['zoom'],
+      '#options' => drupal_map_assoc(range(0, 17)),
+      '#description' => t('The default zoom level of a Google map.'),
+    );
+    gmap_widget_setup($form['gmap_default']['zoom'], 'zoom', 'settings_default_map');
+    
+    $form['#submit'][] = 'landlord_watchlist_profile_neighborhood_submit';
+  }
+}
+
+
+/**
+ * Implementation of hook_form_submit().
+ * The submit callabck for the node/add/neighborhood form.
+ */
+function landlord_watchlist_profile_neighborhood_submit($form, &$form_state) {
+  $form_state['values']['field_neighborhood_center'][0]['value'] = $form_state['values']['latlong'];
+  $form_state['values']['field_neighborhood_zoom'][0]['value'] = $form_state['values']['zoom'];
+}
+
+
+
+
+

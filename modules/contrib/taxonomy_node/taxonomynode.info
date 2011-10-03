@@ -1,0 +1,11 @@
+; $Id: taxonomynode.info,v 1.2.2.1 2009/05/28 21:21:47 hanoii Exp $
+name = Taxonomy Node
+description = Associtates automatically a taxonomy term with a node.
+dependencies[] = taxonomy
+core = 6.x
+; Information added by drupal.org packaging script on 2009-07-30
+version = "6.x-1.0-beta3"
+core = "6.x"
+project = "taxonomy_node"
+datestamp = "1248972254"
+

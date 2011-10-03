@@ -1,0 +1,40 @@
+; $Id$
+
+name        = Bartik (Modified)
+description = Theme for <a href="http://kahthong.com">KahThong.com</a>. This is a modified version of Bartik theme for Drupal 7 core. Backported to Drupal 6 by <a href="http://kahthong.com">Leow Kah Thong</a>.
+screenshot  = screenshot.png
+version     = 6.x-1.0
+core        = 6.x
+engine      = phptemplate
+
+regions[header]  = Header
+regions[left]    = Sidebar left
+regions[right]   = Sidebar right
+regions[content] = Content
+regions[footer]  = Footer
+
+features[] = logo
+features[] = name
+features[] = slogan
+features[] = mission
+features[] = node_user_picture
+features[] = comment_user_picture
+features[] = favicon
+features[] = primary_links
+features[] = secondary_links
+
+stylesheets[all][]   = styles/reset.css
+
+; Choose whether you want a fixed or fluid layout. Clear your Drupal caches.
+stylesheets[all][]   = styles/960-16-col-fixed.css
+; stylesheets[all][]   = styles/960-16-col-fluid.css
+
+stylesheets[all][]   = styles/style.css
+stylesheets[all][]   = styles/style-custom.css
+stylesheets[print][] = styles/print.css
+
+scripts[] = scripts/hoverIntent.js
+scripts[] = scripts/superfish.js
+scripts[] = scripts/script.js
+scripts[] = scripts/script-custom.js
+

@@ -1,0 +1,187 @@
+
+/**
+ * Aggressive resets so we can achieve a consistent look in
+ * hostile CSS environments.
+ */
+div.admin-links,
+div#admin-toolbar,
+div#admin-toolbar * {
+  margin:0px;
+  padding:0px;
+  border:0px;
+  outline:0px;
+  font-size:100%;
+  vertical-align:baseline;
+  line-height:inherit;
+  text-align:left;
+}
+
+/**
+ * Body
+ */
+body.toolbar {
+  margin-top: 30px !important;
+}
+
+/**
+ * Base styles
+ */
+div#toolbar-toolbar {
+  background:none repeat scroll 0 0 #000000;
+  color:#FFFFFF;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  z-index:100;
+}
+
+div#toolbar-toolbar .collapsed {
+  display:none;
+}  
+
+div#toolbar-toolbar div.shadow {
+  position:absolute;
+  left:0px;
+  right:0px;
+  bottom:-10px;
+  height:10px;
+
+  background:url(sprite.png) 0px -100px repeat-x;
+}
+
+div#toolbar-toolbar a {
+  text-decoration:none;
+  color:#fff;
+}
+
+div#toolbar-toolbar ul.links li,
+div#toolbar-toolbar ul.links li a {
+  float:left;
+  padding-right: 0.25em;
+}
+
+div#toolbar-toolbar div.depth-0 {
+  overflow:hidden;
+  height:30px;
+  padding:0px 5px;
+}
+
+div#toolbar-toolbar div.depth-0 #admin-toolbar-admin {
+  float:left;
+}
+
+div#toolbar-toolbar div.depth-0 #admin-toolbar-user {
+  float:right;
+}
+
+div#toolbar-toolbar div.depth-0 ul.links li a {
+  -moz-border-radius:10px;
+  -webkit-border-radius:10px;
+  padding:0px 10px;
+  }
+
+div#toolbar-toolbar div.depth-0 ul.links li a.active {
+  text-shadow:#333 0px 1px 0px;
+  background:url(sprite.png) 0px 0px repeat-x;
+  }
+
+/**
+ * Second level menus
+ */
+div#toolbar-toolbar div.depth-0 {
+  position:relative;
+  padding:0 10px 0 40px;
+  }
+
+div#toolbar-toolbar div.depth-0 span.close {
+  position:absolute;
+  top:15px;
+  right:10px;
+
+  cursor:pointer;
+  background:url(sprite.png) 0px -135px no-repeat;
+  text-indent:-9999px;
+  overflow:hidden;
+
+  width:20px;
+  height:20px;
+  }
+
+div#toolbar-toolbar div.depth-0 ul.links {
+  padding:3px 0px;
+  height:25px;
+  line-height:20px;
+  overflow:hidden;
+  float:left;
+}
+
+div#toolbar-toolbar div.depth-0 ul.links li a {
+  padding:0px 7px;
+  margin-right:5px;
+
+  -moz-border-radius:10px;
+  -webkit-border-radius:10px;
+}
+
+div#toolbar-toolbar div.depth-0 ul.links li a.active,
+div#toolbar-toolbar div.depth-0 ul.links li a:hover {
+  background-color:#333;
+}
+
+div#toolbar-toolbar div.depth-0 span.icon {
+  float:left;
+  margin-right:0px;
+}
+
+/**
+ * Help
+ */
+div#toolbar-toolbar div.depth-0 a#contextual-help-toggle {
+  background:url("help.png") no-repeat scroll 0 0 transparent;
+  height:20px;
+  right:20px;
+  top:5px;
+  width:10px;
+}
+
+span.icon-help {
+  background:url("help.png") no-repeat scroll 0 0 transparent;
+  color:#333333;
+  display:inline;
+  float:left;
+  margin:4px 0 0;
+  padding:15px 0 5px 21px;
+}
+
+div#toolbar-help {
+  -moz-border-radius:6px;
+  -webkit-border-radius: 6px;
+  background:none repeat scroll 0 0 #333333;
+  border:1px solid #000000;
+  color:#FFFFFF;
+  font-size:12px;
+  left:30%;
+  padding:0.5em 1em;
+  position:fixed;
+  right:30%;
+  top:50px;
+  width:500px;
+  z-index:1000000;
+}
+
+div#toolbar-help.hidden {
+  display: none;
+}
+
+span.help-close {
+  background-image:url("sprite.png");
+  background-position:0 -135px;
+  background-repeat:no-repeat;
+  display:block;
+  float:right;
+  margin:-15px -20px 0 0;
+  padding:15px 10px 5px;
+  position:relative;
+  cursor: pointer;
+}

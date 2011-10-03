@@ -1,0 +1,21 @@
+/* $Id$ */
+
+body,
+input,
+textarea,
+select {
+  background: none;
+  color: #000;
+}
+#search-box,
+#primary,
+#secondary,
+#mission,
+#footer,
+.sidebar,
+.feed-icon {
+  display: none;
+}
+#main {
+  width: 100%;
+}

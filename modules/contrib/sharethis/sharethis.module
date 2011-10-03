@@ -1,0 +1,197 @@
+<?php
+// $Id: sharethis.module,v 1.1.2.13 2009/06/06 17:40:54 robloach Exp $
+
+/**
+ * @file
+ * Provides the ShareThis service.
+ */
+
+/**
+ * Implementation of hook_help().
+ */
+function sharethis_help($path, $arg) {
+  switch ($path) {
+    case 'admin/help#sharethis':
+      $output = '<p>'. t('Provides functionality to interface with the <a href="@sharethis">ShareThis</a> web service to share data across different social networks.', array('@sharethis' => 'http://sharethis.com')) .'</p>';
+      $output .= '<p>'. theme('sharethis', t('Drupal ShareThis Module'), 'http://drupal.org/project/sharethis') .'</p>';
+      return $output;
+    case 'admin/settings/sharethis':
+      return '<p>'. t('Below provides the settings for interfacing with the <a href="@sharethis">ShareThis</a> web service to share data across different social networks.', array('@sharethis' => 'http://sharethis.com')) .'</p>';
+  }
+}
+
+/**
+ * Implementation of hook_perm().
+ */
+function sharethis_perm() {
+  return array('administer share', 'use share this');
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function sharethis_menu() {
+  $items = array();
+  $items['admin/settings/sharethis'] = array(
+    'title' => t('ShareThis'),
+    'description' => t('Administer settings related to the ShareThis web service.'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('sharethis_admin_settings'),
+    'access arguments' => array('administer share'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'sharethis.admin.inc',
+  );
+  return $items;
+}
+
+/**
+ * Implementation of hook_nodeapi().
+ */
+function sharethis_nodeapi(&$node, $op, $teaser, $page) {
+  switch ($op) {
+    case 'view':
+      if (user_access('use share this')) {
+        if (!$teaser || variable_get('sharethis_teaser', 1)) {
+          if (variable_get('sharethis_sharethis_this_where', 'links') == 'nodes') {
+            if (in_array($node->type, variable_get('sharethis_sharethis_this_node_types', array()), TRUE)) {
+              // Create the ShareThis element.
+              $sharethis = theme('sharethis', $node->title, url('node/'. $node->nid, array('absolute' => TRUE)));
+              $node->content['sharethis_sharethis_this'] = array(
+                '#value' => $sharethis,
+                '#weight' => variable_get('sharethis_sharethis_weight', 0),
+              );
+            }
+          }
+        }
+      }
+    break;
+  }
+}
+
+/**
+ * Implementation of hook_link().
+ */
+function sharethis_link($type, $node = NULL, $teaser = FALSE) {
+  if ($type == 'node' && user_access('use share this')) {
+    if (!$teaser || variable_get('sharethis_teaser', 1)) {
+      if (variable_get('sharethis_sharethis_this_where', 'links') == 'links') {
+        if (in_array($node->type, variable_get('sharethis_sharethis_this_node_types', array()), TRUE)) {
+          // Make sure the ShareThis JavaScript is made available.
+          sharethis_add_js();
+
+          // Create the ShareThis element.
+          $links['sharethis_link'] = array(
+            'title' => t('ShareThis'),
+            'href' => url('node/'. $node->nid, array('absolute' => TRUE)),
+            'attributes' => array(
+              'class' => 'sharethis-link', // This is the class that is processed.
+              'title' => check_plain($node->title),
+              'rel' => 'nofollow',
+            ),
+          );
+          return $links;
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Implementation of hook_block().
+ */
+function sharethis_block($op = 'list', $delta = 0, $edit = array()) {
+  switch ($op) {
+    case 'list':
+      $blocks['sharethis'] = array(
+        'info' => t('ShareThis'),
+        'cache' => BLOCK_NO_CACHE, // Don't cache it because it needs to add JavaScript.
+      );
+      return $blocks;
+    break;
+    case 'view':
+      if ($delta == 'sharethis') {
+        return array(
+          'subject' => t('ShareThis'),
+          'content' => theme('sharethis', drupal_get_title(), $_GET['q']),
+        );
+      }
+    break;
+  }
+}
+
+/**
+ * Adds all required ShareThis JavaScript to the page.
+ */
+function sharethis_add_js() {
+	// Be sure to add the ShareThis header code only once.
+  static $sharethis_added = FALSE;
+  if ($sharethis_added === FALSE) {
+  	// Adds the ShareThis jQuery plugin as well as the related Drupal JavaScript behavior and CSS.
+  	$path = drupal_get_path('module', 'sharethis');
+    drupal_add_js($path . '/sharethis/jquery.sharethis.js');
+    drupal_add_js($path . '/sharethis.js');
+
+    // Add the ShareThis code if desired.
+    $code = variable_get('sharethis_code', '');
+    if (!empty($code)) {
+      $code = str_replace('<script type="text/javascript" src="', '', $code);
+      $code = str_replace('"></script>', '', $code);
+      drupal_add_js(array('sharethisUrl' => $code), 'setting');
+    }
+
+    // Flag that the JavaScript has been registered.
+    $sharethis_added = TRUE;
+  }
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function sharethis_theme() {
+  return array(
+    'sharethis' => array(
+      'arguments' => array(
+        'title' => NULL,
+        'url' => NULL,
+      ),
+    ),
+  );
+}
+
+/**
+ * Themes the ShareThis options given.
+ *
+ * @param $title
+ *   (optional) The name of the article you want to share. If not given, will
+ *   use the title of the currently displayed page.
+ * @param $url
+ *   (optional) The URL of the article you want to share. If not given, will use
+ *   the URL of the page you're currently on.
+ * @return
+ *   HTML for the ShareThis element.
+ */
+function theme_sharethis($title = NULL, $url = NULL) {
+  // Add the JavaScript and render the HTML.
+  sharethis_add_js();
+
+  // Construct the ShareThis link using the title and the URL.
+  $title = isset($title) ? $title : drupal_get_title();
+  $url = isset($url) ? $url : $_GET['q'];
+  return l(t('ShareThis'), $url, array(
+    'absolute' => TRUE,
+    'attributes' => array(
+      'class' => 'sharethis-link',
+      'title' => $title,
+      'rel' => 'nofollow',
+    ),
+  ));
+}
+
+/**
+ * Implementation of hook_views_api().
+ */
+function sharethis_views_api() {
+  return array(
+    'api' => 2,
+  );
+}

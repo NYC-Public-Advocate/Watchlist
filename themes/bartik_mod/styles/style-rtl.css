@@ -1,0 +1,12 @@
+/* $Id$ */
+
+/*
+ * HTML elements
+ */
+body, html {
+  direction: rtl;
+}
+
+/*
+ * Layout styles
+ */

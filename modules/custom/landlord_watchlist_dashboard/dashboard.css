@@ -1,0 +1,14 @@
+#block-menu-menu-watchlist-checklist li{
+  list-style: decimal;
+  list-style-image: none;
+}
+
+#block-menu-menu-watchlist-checklist a{
+  color: #930000;
+  font-weight: bold;
+}
+
+#block-menu-menu-watchlist-checklist a:visited{
+  color: #006804;
+  font-weight: normal !important;
+}

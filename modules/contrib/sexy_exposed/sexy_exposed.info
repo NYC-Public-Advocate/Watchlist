@@ -1,0 +1,15 @@
+; $Id: sexy_exposed.info,v 1.1.2.1 2010/09/09 10:18:23 zserno Exp $
+name = Views sexy exposed
+description = Pimp up views exposed filters
+core = 6.x
+package = Views
+
+dependencies[] = jquery_ui
+dependencies[] = views
+
+; Information added by drupal.org packaging script on 2010-09-09
+version = "6.x-1.0-beta1"
+core = "6.x"
+project = "sexy_exposed"
+datestamp = "1284043607"
+

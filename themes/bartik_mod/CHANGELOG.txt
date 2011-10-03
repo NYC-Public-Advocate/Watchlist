@@ -1,0 +1,11 @@
+$Id$
+
+bartik_mod-6.x-1.01, 2010-10-17
+-------------------------------
+- Fixed bug with the error message background image repeating.
+- Fixed bug with Vertical Tabs item list type.
+- Added fluid width layout. Configure from info file.
+
+bartik_mod-6.x-1.0, 2010-10-13
+------------------------------
+- First release of Drupal 6 backport (rewrite).

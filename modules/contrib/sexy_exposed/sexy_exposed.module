@@ -1,0 +1,83 @@
+<?php
+// $Id: sexy_exposed.module,v 1.1.2.3 2010/09/09 14:34:16 zserno Exp $
+
+/**
+ * @file Views sexy exposed module file.
+ */
+
+/**
+ * Implementation of hook_form_FORM_ID_form_alter().
+ */
+function sexy_exposed_form_views_ui_config_item_form_alter(&$form, &$form_state) {
+  // Check if we're on an expose settings form.
+  if (!isset($form['options']['expose'])) {
+    return;
+  }
+
+  // Fetch default value for sexy.
+  $display_id = $form_state['display_id'];
+  $display = $form_state['view']->display[$display_id];
+
+  $field_id = $form_state['id'];
+  if (isset($display->display_options['filters'])) {
+    $sexy = $display->display_options['filters'][$field_id]['expose']['sexy'];
+    $sexy_number = $display->display_options['filters'][$field_id]['expose']['sexy_number'];
+  }
+  else {
+    $sexy_number = $form_state['view']->display['default']->display_options['filters'][$field_id]['expose']['sexy_number'];
+  }
+
+  // We would like to extend the checkboxes on the right.
+  $end_checkboxes = $form['options']['expose']['end_checkboxes'];
+  unset($form['options']['expose']['end_checkboxes']);
+
+  $form['options']['expose']['sexy'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Make it sexy'),
+    '#description' => t('Use some jQuery magic to make this filter sexy. Note: it works only for select lists.'),
+    '#default_value' => $sexy,
+  );
+
+  // @TODO Validate if value is a positive integer!
+  $form['options']['expose']['sexy_number'] = array(
+    '#type' => 'textfield',
+    '#prefix' => '<div id="edit-options-expose-sexy-wrapper">',
+    '#suffix' => '</div>',
+    '#title' => t('Number of items'),
+    '#description' => t('Optional. You can specify how many items should be visible in the drop down list. 0 means all.'),
+    '#default_value' => is_numeric($sexy_number) ? $sexy_number : 0,
+    '#size' => 3,
+    '#process' => array('expand_checkboxes', 'views_process_dependency'),
+    '#dependency' => array('edit-options-expose-sexy' => array(TRUE)),
+  );
+
+  $form['options']['expose']['end_checkboxes'] = $end_checkboxes;
+}
+
+/**
+ * Implementation of hook_views_pre_execute().
+ */
+function sexy_exposed_views_pre_execute(&$view) {
+  $needs_sexy_love = array();
+
+  // Collect filters that need some sexy love.
+  foreach ($view->filter as $filter_id => $filter) {
+    $options = &$filter->options;
+    if ($options['exposed'] && !empty($options['expose']['sexy'])) {
+      $needs_sexy_love['select#edit-'. form_clean_id($options['expose']['identifier'])] = $options['expose']['sexy_number'];
+    }
+  }
+
+  if (!empty($needs_sexy_love)) {
+    $path = drupal_get_path('module', 'sexy_exposed');
+    // Add necessary js files.
+    jquery_ui_add('ui.core');
+    drupal_add_js($path .'/js/ddcl/js/ui.dropdownchecklist-min.js');
+    drupal_add_js($path .'/js/sexy_exposed.js');
+    drupal_add_js(array('sexyExposed' => $needs_sexy_love),'setting');
+
+    // Add necessary css files.
+    drupal_add_css($path .'/js/ddcl/css/ui.dropdownchecklist.css');
+  }
+}
+

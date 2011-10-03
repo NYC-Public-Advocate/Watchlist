@@ -1,0 +1,11 @@
+name = Toolbar
+description = Presents a toolbar style menu with shortcuts.
+core = 6.x
+package = "Toolbar"
+
+; Information added by drupal.org packaging script on 2011-03-23
+version = "6.x-2.4"
+core = "6.x"
+project = "toolbar"
+datestamp = "1300887368"
+

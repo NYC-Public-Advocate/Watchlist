@@ -1,0 +1,19 @@
+<?php
+function landlord_watchlist_default_content_install() {
+  $source = feeds_source('landlord_watchlist');
+  $source->addConfig(array(
+    'FeedsFileFetcher' => array('source' => drupal_get_path('module', 'landlord_watchlist_default_content') . '/watchlist_default_data.csv'),
+    'FeedsCSVParser' => array('delimeter' => ',', 'no_headers' => 0),
+  ));
+  dpm($source);
+  $source->save();
+
+  // Refresh feed if import on create is selected.
+  if ($source->importer->config['import_on_create']) {
+    feeds_batch_set(t('Importing'), 'import', 'landlord_watchlist');
+  }
+
+  // Add to schedule, make sure importer is scheduled, too.
+  $source->schedule();
+  $source->importer->schedule();
+}

@@ -1,0 +1,122 @@
+<?php
+// $Id: uuid.install,v 1.1.2.9 2010/09/08 16:07:14 recidive Exp $
+
+/**
+ * @file
+ * Install, update and uninstall functions for the uuid module.
+ */
+
+/**
+ * Implementation of hook_enable().
+ */
+function uuid_enable() {
+  module_load_include('inc', 'uuid', 'uuid.admin');
+  uuid_sync();
+}
+
+/**
+ * Implementation of hook_install().
+ */
+function uuid_install() {
+  // Create tables.
+  drupal_install_schema('uuid');
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function uuid_schema() {
+  return array(
+    'uuid_node' => uuid_table_schema('node', 'nid'),
+    'uuid_node_revisions' => uuid_table_schema('node_revisions', 'vid'),
+    'uuid_users' => uuid_table_schema('users', 'uid'),
+    'uuid_vocabulary' => uuid_table_schema('vocabulary', 'vid'),
+    'uuid_term_data' => uuid_table_schema('term_data', 'tid'),
+    'uuid_comments' => uuid_table_schema('comments', 'cid'),
+  );
+}
+
+/**
+ * Return schema for a uuid table.
+ *
+ * @param $key
+ *   Name of key field, e.g. nid for nodes.
+ *
+ * @return
+ *   Array with table structure definition (schema).
+ */
+function uuid_table_schema($table, $key = 'key') {
+  return array(
+    'fields' => array(
+      $key => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The primary key of the record which this UUID was generated for.',
+      ),
+      'uuid' => array(
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+        'default' => '',
+        'description' => 'The Universally Unique Identifier.',
+      ),
+    ),
+    'primary key' => array($key),
+    'unique keys' => array(
+      'uuid_'. $table .'_uuid_key' => array('uuid'),
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function uuid_uninstall() {
+  variable_del('uuid_automatic_for_nodes');
+  variable_del('uuid_automatic_for_users');
+  variable_del('uuid_automatic_for_taxonomy');
+  variable_del('uuid_automatic_for_comments');
+
+  // Remove tables.
+  drupal_uninstall_schema('uuid');
+}
+
+/**
+ * Create uuid_vocabulary and uuid_term_data tables.
+ */
+function uuid_update_6001() {
+  $ret = array();
+
+  db_create_table($ret, 'uuid_vocabulary', uuid_table_schema('vocabulary', 'vid'));
+  db_create_table($ret, 'uuid_term_data', uuid_table_schema('term_data', 'tid'));
+
+  return $ret;
+}
+
+/**
+ * For each of out tables, drop the indexe on the UUID column and add a unique
+ * key on that column.
+ */
+function uuid_update_6002() {
+  $ret = array();
+
+  foreach (uuid_schema() as $table => $schema) {
+    db_drop_index($ret, $table, $table . '_uuid_idx');
+    db_add_unique_key($ret, $table, $table . '_uuid_key', array('uuid'));
+  }
+
+  return $ret;
+}
+
+/**
+ * Create uuid_comment table.
+ */
+function uuid_update_6003() {
+  $ret = array();
+
+  db_create_table($ret, 'uuid_comments', uuid_table_schema('comments', 'cid'));
+
+  return $ret;
+}

@@ -1,0 +1,694 @@
+<?php
+
+/**
+ * @file
+ * Handles main functions and hooks for Toolbar module
+ */
+
+/**
+ * Implementation of hook_enable().
+ */
+function toolbar_enable() {
+  // clean deleted users and roles from toolbar tables
+  db_query('DELETE FROM {toolbar_user} where {toolbar_user}.uid NOT IN(SELECT uid FROM {users})');
+  db_query('DELETE FROM {toolbar_role} where {toolbar_role}.rid NOT IN(SELECT rid FROM {role})');
+}
+
+/**
+ * Implementation of hook_disable().
+ */
+function toolbar_disable() {
+}
+
+/**
+ * Implementation of hook_help().
+ */
+function toolbar_help($path, $arg) {
+  switch ($path) {
+    case 'admin/help#toolbar':
+      return '<p>'. t("The toolbar module provides an interface to configure and display a toolbar style menu and enhance user navigation experience. Toolbars are a hierarchical collection of links, or toolbar shortcuts, used to navigate a website.") .'</p>';
+    case 'admin/build/toolbar':
+      return
+        '<p>'. t('Toolbars are a collection of links (shortcuts) used to navigate a website. The toolbars currently available on your site are displayed below.') .'</p>'
+        . '<p>'. t('Remember to enable the toolbars per roles at the <a href="@settings">toolbar settings page</a>. You can also set toolbar per user basis at the Toolbar tab in user\'s profile page.', array('@settings' => url('admin/settings/toolbar')));
+    case 'admin/build/toolbar/add':
+      return '<p>'. t('Enter the name and the title for your new toolbar.') .'</p>';
+    case 'admin/build/toolbar/import':
+      return '<p>'. t('Paste the toolbar export data as copied from the export form. Please make sure you are pasting from the same editor/source file where you stored the data. The character encoding the the data formatting is important.') .'</p>';
+    case 'admin/build/toolbar/%/export':
+      return '<p>'. t('The field <em>Data</em> contains all toolbar shortcuts data to be exported. Copy this field in a simple text editor like Notepad, TextEdit, Gedit or Kate and then use the !import_form to import the Toolbar.', array('!import_form' => l('import toolbar form', 'admin/build/toolbar/import')) ) .'</p>';
+    case 'admin/build/toolbar/%/shortcut':
+      return
+          '<p>'. t('Shortcuts are links used to navigate a website. The list of shortcuts in the toolbar are displayed below.') .'</p>'
+        . '<p>'. t('To rearrange toolbar shortcuts, grab a drag-and-drop handle under the <em>Shortcut</em> column and drag the shortcut to a new location in the list. (Grab a handle by clicking and holding the mouse while hovering over a handle icon.) Remember that your changes will not be saved until you click the <em>Save configuration</em> button at the bottom of the page.') .'</p>';
+    case 'admin/build/toolbar/%/shortcut/add':
+      return '<p>'. t('Enter the title and path for your new shortcut item.') .'</p>';
+    case 'admin/settings/toolbar':
+      return
+        '<p>'. t('This page presents the toolbar per role settings. You can set a toolbar for each system role. If there is no toolbar manually set for the user, at the <em>\'user/%uid/toolbar\'</em> page, the role toolbar is displayed. If the user has multiple roles the toolbar for role with highest weight (highest position in the list below) is displayed.') .'</p>'
+      . '<p>'. t('To rearrange roles, grab a drag-and-drop handle under the <em>Role</em> column and drag the role to a new location in the list. (Grab a handle by clicking and holding the mouse while hovering over a handle icon.) Remember that your changes will not be saved until you click the <em>Save configuration</em> button at the bottom of the page.') .'</p>';
+    case 'user/%/toolbar':
+      return
+        '<p>'. t('Toolbar configuration for your user account. Choose the toolbar you want to use. The <em>Role default toolbar</em> option selects the Toolbar set for your user role by the site\'s administrators.') . '</p>';
+  }
+}
+
+/**
+ * Prefix for toolbar name in {menu_links} table in order to avoid conflicts.
+ */
+define('TOOLBAR_NAME_PREFIX', 'set-');
+
+/**
+ * Tolbar name value when toolbar has been disabled for the user.
+ *
+ * @see _toolbar_get_user_selected_toolbar()
+ */
+define('TOOLBAR_NAME_DISABLED', 'disabled');
+
+/**
+ * Maximum length of the machine readable toolbar name.
+ * This value is the result of menu_name field length in menu_links table
+ * minus the length of TOOLBAR_NAME_PREFIX string.
+ */
+define('TOOLBAR_MAX_NAME_LENGTH_UI', 28);
+
+/**
+ * Implementation of hook_perm().
+ */
+function toolbar_perm() {
+  return array(
+    'select toolbar',
+    'administer toolbar',
+  );
+}
+
+/**
+ * Implementation of hook_init().
+ */
+function toolbar_init() {
+  global $user;
+
+  // Toolbar configured for current user
+  if ( _toolbar_get_user_toolbar($user) ) {
+    $path = drupal_get_path('module', 'toolbar');
+    drupal_add_js($path . '/toolbar.js');
+    drupal_add_css($path . '/toolbar.css');
+  }
+}
+
+/**
+ * Implementation of hook_footer().
+ */
+function toolbar_footer($main = 0) {
+  global $user;
+
+  if (toolbar_suppress(FALSE)) {
+    return;
+  }
+
+  $output = '';
+  $toolbar_name = _toolbar_get_user_toolbar($user);
+
+  if ( $toolbar_name ) {
+    // Get the shortcuts in toolbar
+    $shortcuts = _toolbar_build_shortcuts($toolbar_name);
+    // Get the hard-coded links
+    $system_shortcuts = _toolbar_build_system_shortcuts();
+    // Help
+    $help = _toolbar_build_help();
+
+    $output = theme('toolbar', $shortcuts, $system_shortcuts, $help);
+  }
+  return $output;
+}
+
+/**
+ * Suppress display of toolbar.
+ *
+ * This function should be called from within another module's page callback
+ * (preferably using module_invoke()) when the toolbar should not be displayed.
+ * This is useful for modules that implement popup pages or other special
+ * pages where the toolbar would be distracting or break the layout.
+ *
+ * @param $set
+ *   Defaults to TRUE. If called before hook_footer(), the toolbar will not be
+ *   displayed. If FALSE is passed, the suppression state is returned.
+ */
+function toolbar_suppress($set = TRUE) {
+  static $suppress = FALSE;
+
+  if (!empty($set) && $suppress === FALSE) {
+    $suppress = TRUE;
+  }
+  return $suppress;
+}
+
+
+/**
+ * Implementation of hook_theme().
+ */
+function toolbar_theme($cache, $type, $theme, $path) {
+  return array(
+    // We need to pass two arguments here, the shortcuts from the database and the hard-coded links with user links
+    'toolbar' => array(
+      'arguments' => array('shortcuts' => NULL, 'system_shortcuts' => NULL, 'help' => NULL),
+      'template'  => 'toolbar',
+    ),
+    'toolbar_shortcuts_overview_form' => array(
+      'arguments' => array('form' => NULL),
+      'file'      => 'toolbar.shortcuts.admin.inc',
+    ),
+    'toolbar_settings_form' => array(
+      'arguments' => array('form' => NULL),
+      'file'      => 'toolbar.settings.inc',
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function toolbar_menu() {
+  return array(
+    'admin/build/toolbar' => array(
+      'title' => t('Toolbar'),
+      'description' => t('Configure toolbars'),
+      'page callback' => 'toolbar_overview_page',
+      'access callback' => 'user_access',
+      'access arguments' => array('administer toolbar'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'toolbar.admin.inc',
+    ),
+    'admin/build/toolbar/overview' => array(
+      'title' => t('Overview'),
+      'type' => MENU_DEFAULT_LOCAL_TASK,
+    ),
+    'admin/build/toolbar/add' => array(
+      'title' => t('Add toolbar'),
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('toolbar_edit_form'),
+      'access callback' => 'user_access',
+      'access arguments' => array('administer toolbar'),
+      'type' => MENU_LOCAL_TASK,
+      'weight' => 1,
+      'file' => 'toolbar.admin.inc',
+    ),
+    'admin/build/toolbar/import' => array(
+      'title' => t('Import'),
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('toolbar_import_form'),
+      'access callback' => 'user_access',
+      'access arguments' => array('administer toolbar'),
+      'type' => MENU_LOCAL_TASK,
+      'weight' => 2,
+      'file' => 'toolbar.admin.inc',
+    ),
+    'admin/build/toolbar/%toolbar_toolbar/edit' => array(
+      'title' => t('Edit '),
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('toolbar_edit_form', 3),
+      'access callback' => 'user_access',
+      'access arguments' => array('administer toolbar'),
+      'type' => MENU_CALLBACK,
+      'file' => 'toolbar.admin.inc',
+    ),
+    'admin/build/toolbar/%toolbar_toolbar/delete' => array(
+      'title' => t('Delete toolbar'),
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('toolbar_delete_confirm', 3),
+      'access callback' => 'user_access',
+      'access arguments' => array('administer toolbar'),
+      'type' => MENU_CALLBACK,
+      'file' => 'toolbar.admin.inc',
+    ),
+    'admin/build/toolbar/%toolbar_toolbar/export' => array(
+      'title callback' => 'toolbar_toolbar_title_callback',
+      'title arguments' => array(3, t('Export toolbar')),
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('toolbar_export_form', 3),
+      'access callback' => 'user_access',
+      'access arguments' => array('administer toolbar'),
+      'type' => MENU_CALLBACK,
+      'file' => 'toolbar.admin.inc',
+    ),
+    'admin/build/toolbar/%toolbar_toolbar/shortcut' => array(
+      'title callback' => 'toolbar_toolbar_title_callback',
+      'title arguments' => array(3),
+      'description' => t('Preview and order the shortcuts in toolbar.'),
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('toolbar_shortcuts_overview_form', 3),
+      'access callback' => 'user_access',
+      'access arguments' => array('administer toolbar'),
+      'type' => MENU_CALLBACK,
+      'file' => 'toolbar.shortcuts.admin.inc',
+    ),
+    'admin/build/toolbar/%toolbar_toolbar/shortcut/list' => array(
+      'title' => t('Shortcuts'),
+      'type' => MENU_DEFAULT_LOCAL_TASK,
+    ),
+    'admin/build/toolbar/%toolbar_toolbar/shortcut/add' => array(
+      'title' => t('Add shortcut'),
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('toolbar_shortcut_edit_form', 3),
+      'access callback' => 'user_access',
+      'access arguments' => array('administer toolbar'),
+      'type' => MENU_LOCAL_TASK,
+      'weight' => 1,
+      'file' => 'toolbar.shortcuts.admin.inc',
+    ),
+    'admin/build/toolbar/%toolbar_toolbar/shortcut/%toolbar_shortcut/edit' => array(
+      'title' => t('Edit shortcut'),
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('toolbar_shortcut_edit_form', 3, 5),
+      'access callback' => 'user_access',
+      'access arguments' => array('administer toolbar'),
+      'type' => MENU_CALLBACK,
+      'file' => 'toolbar.shortcuts.admin.inc',
+    ),
+    'admin/build/toolbar/%toolbar_toolbar/shortcut/%toolbar_shortcut/delete' => array(
+      'title' => t('Delete shortcut'),
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('toolbar_shortcut_delete_confirm', 3, 5),
+      'access callback' => 'user_access',
+      'access arguments' => array('administer toolbar'),
+      'type' => MENU_CALLBACK,
+      'file' => 'toolbar.shortcuts.admin.inc',
+    ),
+    'admin/settings/toolbar' => array(
+      'title' => t('Toolbar settings'),
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('toolbar_settings_form'),
+      'access callback' => 'user_access',
+      'access arguments' => array('administer toolbar'),
+      'type' => MENU_NORMAL_ITEM,
+      'file' => 'toolbar.settings.inc',
+    ),
+    'user/%user/toolbar' => array(
+      'title' => t('Toolbar'),
+      'page callback' => 'drupal_get_form',
+      'page arguments' => array('toolbar_user_select_toolbar_form', 1),
+      'access callback' => 'user_access',
+      'access arguments' => array('select toolbar'),
+      'type' => MENU_LOCAL_TASK,
+      'file' => 'toolbar.user.inc',
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_load().
+ */
+function toolbar_toolbar_load($name) {
+  return db_fetch_array(db_query("SELECT * FROM {toolbar_toolbar} WHERE name = '%s'", $name));
+}
+
+/**
+ * Implementation of hook_load().
+ */
+function toolbar_shortcut_load($mlid) {
+  return menu_link_load($mlid);
+}
+
+/**
+ * Title callback for toolbar used in various administration pages.
+ */
+function toolbar_toolbar_title_callback($toolbar, $prefix = NULL, $suffix = NULL) {
+  $title = '';
+  if ( !is_null($prefix) ) {
+    $title .= $prefix . ' ';
+  }
+  $title .= $toolbar['title'];
+  if ( !is_null($suffix) ) {
+    $title .= ' ' . $suffix;
+  }
+
+  return $title;
+}
+
+/**
+ * Implementation of hook_form_FORM_ID_alter().
+ *
+ * Handles toolbar role association delete when role is deleted from system.
+ *
+ * @see toolbar_user_admin_role_submit_alter()
+ */
+function toolbar_form_user_admin_role_alter(&$form, $form_state) {
+  $form['#submit'][] = 'toolbar_user_admin_role_submit_alter';
+}
+
+/**
+ * Role delete callback.
+ *
+ * Handles toolbar role association delete when role is deleted from system
+ *
+ * @see toolbar_form_user_admin_role_alter()
+ */
+function toolbar_user_admin_role_submit_alter($form, &$form_state) {
+  if ($form_state['values']['op'] == t('Delete role')) {
+    db_query('DELETE FROM {toolbar_role} WHERE rid = %d', $form_state['values']['rid']);
+  }
+}
+
+/**
+ * Implementation of hook_form_FORM_ID_alter().
+ *
+ * Handles toolbar user association delete when user is deleted from system.
+ *
+ * @see toolbar_user_confirm_delete_submit_alter()
+ */
+function toolbar_form_user_confirm_delete_alter($form, &$form_state) {
+  $form['#submit'][] = 'toolbar_user_confirm_delete_submit_alter';
+}
+
+/**
+ * User delete callback.
+ *
+ * Handles toolbar role association delete when role is deleted from system
+ *
+ * @see toolbar_user_confirm_delete_submit_alter()
+ */
+function toolbar_user_confirm_delete_submit_alter($form, &$form_state) {
+  db_query('DELETE FROM {toolbar_user} WHERE uid = %d', $form_state['values']['_account']->uid);
+}
+
+/**
+ * Get all system toolbars.
+ *
+ * @param $reset
+ * Reset static cache.
+ *
+ * @return
+ * Associative array with toolbar name as key and toolbar title as value.
+ */
+function _toolbar_get_toolbars($reset = FALSE) {
+  static $toolbars;
+
+  if ( !isset($toolbars) || $reset ) {
+    $toolbars = array();
+    $result = db_query('SELECT * FROM {toolbar_toolbar}');
+    while ( $toolbar = db_fetch_array($result) ) {
+      $toolbars[check_plain($toolbar['name'])] = $toolbar['title'];
+    }
+  }
+  return $toolbars;
+}
+
+function _toolbar_get_shortcuts($toolbar) {
+  $result = db_query("SELECT mlid, link_title, link_path, weight FROM {menu_links} WHERE menu_name = '%s' ORDER BY weight ASC", $toolbar['name']);
+
+  $shortcuts = array();
+
+  while ($shortcut = db_fetch_array($result)) {
+    $shortcuts[] = $shortcut;
+  }
+  return $shortcuts;
+}
+
+/**
+ * Build shortcuts links
+ *
+ * @param $toolbar_name
+ * The toolbar to build
+ *
+ * @return
+ * An array containing links
+ */
+function _toolbar_build_shortcuts($toolbar_name) {
+  $links = array();
+
+  $links = menu_navigation_links($toolbar_name);
+  // Allow other modules to alter the links
+  drupal_alter('toolbar_build_shortcuts', $links);
+
+  return $links;
+}
+
+/**
+ * Show hard-coded shortcuts
+ *
+ * We use this function to show user links like login, register, logout and hello user
+ * The function will show a link to the login page only if the annonymous users have access
+ * to use the toolbar
+ *
+ * @return
+ * An array containing links
+ */
+function _toolbar_build_system_shortcuts() {
+  global $user;
+
+  $links = array();
+
+  // If the user is annonymous
+  if (empty($user->uid)) {
+    $links['login'] = array(
+      'title' => '<span class="icon"></span>' . t('Login'),
+      'href' => 'user',
+      'attributes' => array(
+        'id' => 'toolbar-link-login',
+      ),
+      'html' => TRUE,
+    );
+
+    // We check if the user is allowed to register itself
+    if (!variable_get('user_register', '') == 0) {
+      $links['register'] = array(
+        'title' => '<span class="icon"></span>' . t('Register'),
+        'href' => 'user/register',
+        'attributes' => array(
+          'id' => 'toolbar-link-register',
+        ),
+        'html' => TRUE,
+      );
+    }
+  }
+
+  // The user is logged in
+  else {
+    $links['user'] = array(
+      'title' => t('Hello <strong>!username</strong>', array('!username' => $user->name)),
+      'href' => 'user',
+      'attributes' => array(
+        'id' => 'toolbar-link-user',
+      ),
+      'html' => TRUE,
+    );
+    $links['logout'] = array(
+      'title' => '<span class="icon"></span>' . t('Log out'),
+      'href' => 'logout',
+      'attributes' => array(
+        'id' => 'toolbar-link-logout',
+      ),
+      'html' => TRUE,
+    );
+  }
+
+  // Allow other modules to alter the system shortcuts
+  drupal_alter('toolbar_build_system_shortcuts', $links);
+
+  return $links;
+}
+
+/**
+ * Build help message.
+ *
+ * @return
+ * Help message for active path.
+ */
+function _toolbar_build_help() {
+  // Check for Help me module
+  if ( module_exists('helpme') ) {
+    $help = theme_helpme();
+  }
+  // Help me module not available, get system help
+  else {
+    $help = menu_get_active_help();
+  }
+
+  if ( empty($help) ) {
+    $help = t('No help available for this page.');
+  }
+
+  return $help;
+}
+
+
+/**
+ * Get toolbar per role associations.
+ *
+ * @param $reset
+ * Reset static cache.
+ *
+ * @return
+ * Associative array with role id as key and toolbar name as value.
+ */
+function _toolbar_get_toolbars_roles($reset = FALSE) {
+  static $toolbars_roles;
+
+  if ( !isset($toolbars_roles) || $reset ) {
+    $result = db_query('SELECT * FROM {toolbar_role} ORDER BY weight ASC');
+    while ( $row = db_fetch_array($result) ) {
+      $toolbars_roles[$row['rid']] = $row['name'];
+    }
+  }
+  return $toolbars_roles;
+}
+
+/**
+ * Get toolbar name for user.
+ *
+ * Toolbar selection is made in two steps. First we check if there is
+ * toolbar set specificly for this user, if not we check if there is toolbar
+ * configured for user's 'top' role.
+ *
+ * @param $user
+ * User object as returned from user_load().
+ *
+ * @return
+ * Toolbar name if toolbar set (user or role), FALSE otherwise
+ *
+ * @see _toolbar_get_user_selected_toolbar()
+ * @see _toolbar_get_role_selected_toolbar()
+ */
+function _toolbar_get_user_toolbar($user) {
+  static $toolbar;
+
+  if ( !isset($toolbar) ) {
+    $toolbar = _toolbar_get_user_selected_toolbar($user);
+    // Toolbar has been disabled for the user.
+    if (TOOLBAR_NAME_DISABLED === $toolbar) {
+      $toolbar = FALSE;
+    }
+    // No toolbar assigned for the user.
+    elseif (FALSE === $toolbar) {
+      $toolbar = _toolbar_get_role_selected_toolbar($user);
+    }
+  }
+
+  return $toolbar;
+}
+
+/**
+ * Get user selected toolbar.
+ *
+ * @param $user
+ * User object as returned by user_load().
+ *
+ * @return
+ * Toolbar name or FALSE if there is no toolbar selected toolbar.
+ */
+function _toolbar_get_user_selected_toolbar($user) {
+  return db_result(db_query('SELECT name FROM {toolbar_user} WHERE uid=%d', $user->uid));
+}
+
+/**
+ * Get toolbar configured for user's 'top' role (based on role weight).
+ *
+ * @param $user
+ * User object as returned by user_load().
+ *
+ * @return
+ * Toolbar name or FALSE if there is no toolbar configured.
+ */
+function _toolbar_get_role_selected_toolbar($user) {
+  return db_result(db_query('SELECT name FROM {toolbar_role} WHERE rid IN(' . implode(',', array_keys($user->roles)) . ') ORDER BY weight ASC LIMIT 1'));
+}
+
+/**
+ * API helper function to create toolbar and insert shortcuts.
+ *
+ * Attention, no checks are done by this function. When using this function
+ * the developer must check that the toolbar name is unique (menu_name field
+ * in menu_links table) and also make sure that the $shortcuts array is
+ * valid. The main goal of this function is to allow dynamicly populate initial
+ * toolbar(s) in clean environment.
+ *
+ *
+ * Example usage:
+ * @code
+ * $shortcuts = array(
+ *  array(
+ *   'link_path' => 'valid/drupal/path',
+ *   'link_title' => 'Example link title 1',
+ *   'weight' => 0,
+ *  ),
+ *  array(
+ *   'link_path' => 'http://external-links-accepted.com',
+ *   'link_title' => 'External link',
+ *   'weight' => 1,
+ *  )
+ * );
+ * toolbar_create('new-toolbar', 'New toolbar', $shortcuts);
+ * @endcode
+ *
+ * @param $name
+ * Machine readable name of the toolbar.
+ *
+ * @param $title
+ * Toolbar title.
+ *
+ * @param $links
+ * Array of links to be created in the toolbar.
+ *
+ * @return
+ * The created toolbar.
+ *
+ * @see menu_link_save()
+ */
+function toolbar_create($name, $title, $shortcuts = array()) {
+  $name = TOOLBAR_NAME_PREFIX . $name;
+  foreach ($shortcuts as $shortcut) {
+    $shortcut['plid'] = 0;
+    $shortcut['menu_name'] = $name;
+    $shortcut['module'] = 'toolbar';
+    menu_link_save($shortcut);
+  }
+  db_query("INSERT INTO {toolbar_toolbar} VALUES ('%s', '%s')", $name, $title);
+
+  return toolbar_toolbar_load($name);
+}
+
+/**
+ * API helper to set toolbar to user. It's best used with toolbar_create().
+ *
+ * @param $toolbar_name
+ * The toolbar name.
+ *
+ * @param $user
+ * The $user object as returned by user_load().
+ */
+function toolbar_set_user_toolbar($toolbar_name, $user) {
+  db_query("DELETE FROM {toolbar_user} WHERE uid = %d", $user->uid);
+  db_query("INSERT INTO {toolbar_user} VALUES(%d, '%s')", $user->uid, $toolbar_name);
+}
+
+/**
+ * API helper to set toolbar to role.
+ *
+ * @param $toolbar_name
+ * The toolbar name.
+ *
+ * @param $rid
+ * The role id.
+ *
+ * @param weight
+ * Toolbar role association weight.
+ */
+function toolbar_set_role_toolbar($toolbar_name, $rid, $weight = 0) {
+  db_query("DELETE FROM {toolbar_role} WHERE rid = %d", $rid);
+  db_query("INSERT INTO {toolbar_role} VALUES(%d, '%s', %d)", $rid, $toolbar_name, $weight);
+}
+
+/**
+ * Implementation of hook_features_api().
+ */
+function toolbar_features_api() {
+  return array(
+    'toolbar' => array(
+      'name' => t('Toolbars'),
+      'default_hook' => 'toolbar_default_toolbars',
+      'default_file' => FEATURES_DEFAULTS_INCLUDED,
+      'file' => drupal_get_path('module', 'toolbar') . '/toolbar.features.inc',
+    ),
+  );
+}
+
