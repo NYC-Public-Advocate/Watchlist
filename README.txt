@@ -15,7 +15,7 @@ For a working demo, visit http://watchlist.albatrossdemos.com.
 Installation
 ============
 
-Download and extract the tarball from GitHub.
+Download and extract the Watchlist + Drupal tarball from GitHub: https://github.com/downloads/NYC-Public-Advocate/Watchlist/watchlist.tgz
 
 Install Drupal as outlined in the Drupal INSTALL.txt file.
 
@@ -29,7 +29,7 @@ The Watchlist is packaged as a profile with a Drush .make file.  To download the
 the source, all you need to do is download the profile tarball from GitHub and run the .make
 file:
   
-  git clone ...
+  git clone git@github.com:NYC-Public-Advocate/Watchlist.git
   mkdir drupal
   cp watchlist/watchlist.make drupal
   mv watchlist drupal/watchlist
