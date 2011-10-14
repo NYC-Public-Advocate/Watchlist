@@ -32,6 +32,7 @@ function landlord_watchlist_coords(){
 }
 
 function landlord_watchlist_form_alter(&$form, $form_state, $form_id) {
+
   if ($form_id == 'views_exposed_form' && strpos($form['#id'], 'views-exposed-form-landlord') !== FALSE){
     // Total infractions dropdown
     $form['infraction']['#type'] = 'select';
@@ -50,7 +51,7 @@ function landlord_watchlist_form_alter(&$form, $form_state, $form_id) {
     global $base_url;
     $form['reset'] = array(
       '#type' => 'markup',
-      '#value' => '<div class="form-reset views-exposed-widget"><a href="#" onClick="javascript:window.location=\''. $base_url . url(arg(0)) . url(arg(1)) .'?t='. time() .'\';return false;">Show all</a></div>',
+      '#value' => '<div class="form-reset views-exposed-widget"><a href="#" onClick="javascript:window.location=\''. $base_url . url(arg(0)) . url(arg(1)) .'?t='. time() .'\';return false;">Reset</a></div>',
     );
     
     $form['#action'] = url('landlord-watchlist/buildings');
@@ -186,9 +187,7 @@ function landlord_watchlist_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
       switch ($node->type){
         case 'landlord':
             $nid = $node->nid;
-            if (!$nid){
-              $nid = db_result(db_query('SELECT max(nid) FROM {node};')) + 1;
-            }
+
             $title = ($node->field_landlord_company[0]['value']) ? $node->field_landlord_company[0]['value'] : $node->title;
             _landlord_watchlist_add_building($title, $nid, $node, $container_type = 'Landlord');
             _landlord_watchlist_add_building($node->locations[0]['postal_code'], $nid, $node, $container_type = 'Zip Code');
@@ -196,7 +195,6 @@ function landlord_watchlist_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
           //}
           break;
       }
-      
       
       break;
     case 'update':
@@ -210,8 +208,13 @@ function landlord_watchlist_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
  */
 function _landlord_watchlist_add_building($title, $building_nid, $building, $container_type = 'Landlord'){
   if ($title){
-    $container = _landlord_watchlist_select_container($title, $building_nid, $container_type);
-
+    $is_new = FALSE;
+    $container = _landlord_watchlist_select_container($title, $building_nid, $container_type, TRUE, $is_new);
+    
+    if (!$building_nid){
+      $building_nid = db_result(db_query('SELECT max(nid) FROM {node};')) + 1 + $is_new;
+    }
+    
     $in_array = FALSE;
     foreach ($container->field_landlord_nid as $value){
 
@@ -285,11 +288,12 @@ function _landlord_watchlist_delete_building($title, $building_nid, $container_t
 /**
  * Selects the proper container to act on
  */
-function _landlord_watchlist_select_container($title, $building_nid, $container_type = 'Landlord', $create_new = TRUE){
+function _landlord_watchlist_select_container($title, $building_nid, $container_type = 'Landlord', $create_new = TRUE, &$is_new = FALSE){
   if (!$container_nid = db_result(db_query('SELECT n.nid FROM {node} AS n WHERE n.type = "landlord_container" AND n.title = "%s";', $title))){
     if ($create_new){
       $container = _landlord_watchlist_add_node('landlord_container', $title, $building_nid, $container_type);
       $container_nid = $container->nid;
+      $is_new = TRUE;
     } else {
       return $false;
     }
@@ -319,7 +323,6 @@ function _landlord_watchlist_add_node($type, $title, $building_nid, $container_t
   if ($container_type){
     $newNode->field_landlord_container_type[0]['value'] = $container_type;
   }
-  //dpm('new');
   
   return $newNode;
 }
@@ -334,31 +337,9 @@ function _landlord_watchlist_add_node($type, $title, $building_nid, $container_t
  *  FeedsSource object that describes the source that has been imported.
  */
 function landlord_watchlist_feeds_after_import($importer, $source) {
-  drupal_clear_css_cache();
-  
-  // Clear caches
-  $tables = array(
-    'cache',
-    'cache_content',
-    'cache_page',
-    'cache_views',
-  );
-  foreach ($tables as $table) {
-    cache_clear_all('*', $table, TRUE);
-  }
-  
-  
-  //views_bulk_operations_execute('landlord_administration', 'node_save_action');
-  drupal_cron_run();
-  global $base_url;
-  //drupal_set_message('Cache cleared.');
-  drupal_set_message(t('Your data has been successfully imported.  We ran the cron job once, however, depending on your !status, it may need to be run again. You can run it manually by going to !cron', 
-    array('!status' => l('search indexing status', 'admin/settings/search'), '!cron' => l($base_url . '/cron.php', 'cron.php')))
-  );
-
+  //drupal_goto ('admin/landlord-watchlist/import/resave');
+   drupal_set_message(l('Now CLICK HERE to save your landlords into buckets.  This sets up the "Worst Landlords" view on the homepage.', 'admin/landlord-watchlist/import/resave'), 'error');
 }
-
-
 
 /**
  * Implmentation of hook_menu();
@@ -371,6 +352,18 @@ function landlord_watchlist_menu() {
    'page arguments' => array('landlord_watchlist_clear_confirm'),
    'access arguments' => array('clear landlord_watchlist feeds'),
    'type' => MENU_NORMAL_ITEM,
+  );
+  $items['admin/landlord-watchlist/import/resave'] = array(
+   'title' => 'Save Landlords into Buckets',
+   'page callback' => 'landlord_watchlist_import_resave',
+   'access arguments' => array('clear landlord_watchlist feeds'),
+   'type' => MENU_NORMAL_ITEM,
+  );
+  $items['admin/landlord-watchlist/import/finished'] = array(
+   'title' => 'Import complete!',
+   'page callback' => 'landlord_watchlist_import_finished',
+   'access arguments' => array('clear landlord_watchlist feeds'),
+   'type' => MENU_CALLBACK,
   );
 
  return $items;
@@ -397,12 +390,119 @@ function landlord_watchlist_clear_confirm($form_state) {
  */
 function landlord_watchlist_clear_confirm_submit($form, &$form_state) {
   if ($form_state['values']['confirm']) {
+
     views_bulk_operations_execute('landlord_administration', 'views_bulk_operations_delete_node_action');
     drupal_get_messages();
     drupal_set_message(t('All of your landlords have been deleted.'));
-  }
 
+  }
   $form_state['redirect'] = 'admin/dashboard';
 }
+
+/**
+ * Menu callback: Re-save is complete.  Clear the caches, run cron, and return the user.
+ */
+function landlord_watchlist_import_finished() {
+
+  // Clear caches
+  $tables = array(
+    'cache',
+    'cache_content',
+    'cache_page',
+    'cache_views',
+  );
+  foreach ($tables as $table) {
+    cache_clear_all('*', $table, TRUE);
+  }
+  
+  
+  drupal_cron_run();
+  global $base_url;
+  drupal_set_message(t('Your data has been successfully imported.  We ran the cron job once, however, depending on your !status, it may need to be run again. You can run it manually by going to !cron', 
+    array('!status' => l('search indexing status', 'admin/settings/search'), '!cron' => l($base_url . '/cron.php', 'cron.php')))
+  );
+  
+  drupal_goto('import/landlord_watchlist');
+  
+}
+
+/**
+ * Menu callback: Start the Re-save batch
+ */
+function landlord_watchlist_import_resave() {
+  batch_set(landlord_watchlist_batch_resave());
+  batch_process('admin/landlord-watchlist/import/finished');
+}
+
+function landlord_watchlist_batch_resave() {
+  $operations = array(array('landlord_watchlist_batch_resave_op', array()));
+
+  $batch = array(
+    'operations' => $operations,
+    'finished' => 'landlord_watchlist_batch_resave_finished',
+    // We can define custom messages instead of the default ones.
+    'title' => t('Saving your landlords into categories'),
+    'init_message' => t('Starting.'),
+    'progress_message' => t('Processed @current out of @total.'),
+    'error_message' => t('Landlord re-save has encountered an error.'),
+  );
+  return $batch;
+}
+
+/**
+ * Batch operation for batch 2 : load all nodes, 5 by five
+ * This is a multipart operation, using the
+ */
+function landlord_watchlist_batch_resave_op(&$context) {
+
+  if (!isset($context['sandbox']['progress'])) {
+    $context['sandbox']['progress'] = 0;
+    $context['sandbox']['current_node'] = 0;
+    $context['sandbox']['max'] = db_result(db_query('SELECT COUNT(DISTINCT nid) FROM {node} WHERE type = "landlord"'));
+  }
+
+  $limit = 5;
+
+  // Retrieve the next group of nids.
+  $result = db_query_range("SELECT nid FROM {node} WHERE nid > %d AND type = 'landlord' ORDER BY nid ASC", $context['sandbox']['current_node'], 0, $limit);
+  while ($row = db_fetch_array($result)) {
+    // Here we actually perform our dummy 'processing' on the current node.
+    $node = node_load($row['nid'], NULL, TRUE);
+    node_save($node);
+
+    // Store some result for post-processing in the finished callback.
+    $context['results'][] = $node->nid . ' : ' . check_plain($node->title);
+
+    // Update our progress information.
+    $context['sandbox']['progress']++;
+    $context['sandbox']['current_node'] = $node->nid;
+    $context['message'] = check_plain($node->title);
+  }
+
+  // Inform the batch engine that we are not finished,
+  // and provide an estimation of the completion level we reached.
+  if ($context['sandbox']['progress'] != $context['sandbox']['max']) {
+    $context['finished'] = $context['sandbox']['progress'] / $context['sandbox']['max'];
+  }
+}
+
+/**
+ * Batch 'finished' callback 
+ */
+function landlord_watchlist_batch_resave_finished($success, $results, $operations) {
+  if ($success) {
+    // Here we could do something meaningful with the results.
+    // We just display the number of nodes we processed...
+    $message = count($results) . ' processed.';
+  }
+  else {
+    // An error occurred.
+    // $operations contains the operations that remained unprocessed.
+    $error_operation = reset($operations);
+    $message = 'An error occurred while processing ' . $error_operation[0] . ' with arguments :' . print_r($error_operation[0], TRUE);
+  }
+  drupal_set_message($message);
+}
+
 
 
