@@ -43,5 +43,5 @@ function landlord_watchlist_dashboard_page(){
   drupal_add_css(drupal_get_path('module', 'landlord_watchlist_dashboard') .'/dashboard.css', 'module');
   drupal_add_js(drupal_get_path('module', 'landlord_watchlist_dashboard') .'/jquery.visited.js');
   drupal_add_js(drupal_get_path('module', 'landlord_watchlist_dashboard') .'/dashboard.js');  
-  return t('Follow the steps in the checklist on the left to set up your Landlord Watchlist');
+  return t('<p>Follow the steps in the checklist on the left to set up your Landlord Watchlist. The video below provides a nice overview of the process;</p>') . '<iframe allowfullscreen="" frameborder="0" height="360" src="http://www.youtube.com/embed/am1w9tg8b5o" style="cursor: default;margin: 0 auto; " width="640"></iframe>';
 }

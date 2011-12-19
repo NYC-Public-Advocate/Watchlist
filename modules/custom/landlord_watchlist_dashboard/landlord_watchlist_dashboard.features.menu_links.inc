@@ -96,42 +96,6 @@ function landlord_watchlist_dashboard_menu_default_menu_links() {
     'expanded' => '0',
     'weight' => '-48',
   );
-  // Exported menu link: menu-watchlist-checklist:admin/content/taxonomy/1
-  $menu_links['menu-watchlist-checklist:admin/content/taxonomy/1'] = array(
-    'menu_name' => 'menu-watchlist-checklist',
-    'link_path' => 'admin/content/taxonomy/1',
-    'router_path' => 'admin/content/taxonomy/%',
-    'link_title' => 'Add neighborhoods',
-    'options' => array(
-      'attributes' => array(
-        'title' => '',
-      ),
-    ),
-    'module' => 'menu',
-    'hidden' => '0',
-    'external' => '0',
-    'has_children' => '0',
-    'expanded' => '0',
-    'weight' => '-48',
-  );
-  // Exported menu link: menu-watchlist-checklist:import/landlord_watchlist
-  $menu_links['menu-watchlist-checklist:import/landlord_watchlist'] = array(
-    'menu_name' => 'menu-watchlist-checklist',
-    'link_path' => 'import/landlord_watchlist',
-    'router_path' => 'import/landlord_watchlist',
-    'link_title' => 'Import data',
-    'options' => array(
-      'attributes' => array(
-        'title' => '',
-      ),
-    ),
-    'module' => 'menu',
-    'hidden' => '0',
-    'external' => '0',
-    'has_children' => '0',
-    'expanded' => '0',
-    'weight' => '-47',
-  );
   // Translatables
   // Included for use with string extractors like potx.
   t('Add Google API key');
@@ -139,8 +103,6 @@ function landlord_watchlist_dashboard_menu_default_menu_links() {
   t('Disable dummy data');
   t('Download data');
   t('Import dummy data');
-  t('Import data');
-  t('Add neighborhoods');
 
 
   return $menu_links;

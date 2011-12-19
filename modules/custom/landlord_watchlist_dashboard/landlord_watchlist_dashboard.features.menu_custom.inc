@@ -15,13 +15,13 @@ function landlord_watchlist_dashboard_menu_default_menu_custom() {
   // Exported menu: menu-watchlist-other-resources
   $menus['menu-watchlist-other-resources'] = array(
     'menu_name' => 'menu-watchlist-other-resources',
-    'title' => 'Other Resrouces',
+    'title' => 'Other Resources',
     'description' => 'Other resources that might be useful for Watchlist administrators.',
   );
   // Translatables
   // Included for use with string extractors like potx.
   t('A checklist for Watchlist site administrators');
-  t('Other Resrouces');
+  t('Other Resources');
   t('Other resources that might be useful for Watchlist administrators.');
   t('Setup Checklist');
 
